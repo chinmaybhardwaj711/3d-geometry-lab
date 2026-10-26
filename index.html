@@ -1,0 +1,634 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Geometry Lab</title>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #0b1020;
+  color: #e8eefc;
+}
+
+header {
+  padding: 20px;
+  border-bottom: 1px solid #293651;
+}
+
+h1 { margin: 0 0 8px; }
+h2 { font-size: 18px; }
+p { color: #b7c5dc; line-height: 1.5; }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 16px;
+  padding: 16px;
+  max-width: 1500px;
+  margin: auto;
+}
+
+#scene {
+  height: 700px;
+  min-height: 450px;
+  border: 1px solid #293651;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+#scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+aside {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  background: #131b2f;
+  border: 1px solid #293651;
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.field { margin: 14px 0; }
+
+label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #b7c5dc;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #38bdf8;
+}
+
+input[type="number"] {
+  width: 30%;
+  min-width: 55px;
+  padding: 8px;
+  background: #0b1222;
+  color: white;
+  border: 1px solid #354562;
+  border-radius: 6px;
+}
+
+button {
+  background: #1b2942;
+  color: white;
+  border: 1px solid #354562;
+  border-radius: 7px;
+  padding: 9px 12px;
+  cursor: pointer;
+  margin: 3px;
+}
+
+button:hover { border-color: #38bdf8; }
+
+.buttons { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.metric {
+  background: #0b1222;
+  padding: 10px;
+  border-radius: 7px;
+  overflow-wrap: anywhere;
+}
+
+.metric span {
+  display: block;
+  color: #a9b7d0;
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+
+.metric strong { font-size: 14px; }
+
+.matrix {
+  overflow-x: auto;
+  white-space: pre;
+  font: 12px/1.7 monospace;
+  color: #7dd3fc;
+  background: #080d19;
+  padding: 10px;
+  border-radius: 7px;
+}
+
+.hint { font-size: 13px; color: #a9b7d0; }
+
+@media (max-width: 950px) {
+  .layout { grid-template-columns: 1fr; }
+  #scene { height: 55vh; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>3D Geometry Lab</h1>
+  <p>Explore 3D vectors, rotations, coordinate transformations and matrices.</p>
+  <button id="reset">Reset</button>
+  <button id="toggleAxes">Toggle Axes/Grid</button>
+  <button id="animate">Animate Rotation</button>
+  <button id="wire">Toggle Wireframe</button>
+</header>
+
+<main class="layout">
+
+  <div id="scene"></div>
+
+  <aside>
+
+    <section class="card">
+      <h2>1. Object Transformation</h2>
+
+      <div class="field">
+        <label>Rotate X <output id="rxv">0°</output></label>
+        <input id="rx" type="range" min="-180" max="180" value="0">
+      </div>
+
+      <div class="field">
+        <label>Rotate Y <output id="ryv">0°</output></label>
+        <input id="ry" type="range" min="-180" max="180" value="0">
+      </div>
+
+      <div class="field">
+        <label>Rotate Z <output id="rzv">0°</output></label>
+        <input id="rz" type="range" min="-180" max="180" value="0">
+      </div>
+
+      <div class="field">
+        <label>Translate X <output id="txv">0</output></label>
+        <input id="tx" type="range" min="-3" max="3" step="0.1" value="0">
+      </div>
+
+      <div class="field">
+        <label>Translate Y <output id="tyv">0</output></label>
+        <input id="ty" type="range" min="-3" max="3" step="0.1" value="0">
+      </div>
+
+      <div class="field">
+        <label>Translate Z <output id="tzv">0</output></label>
+        <input id="tz" type="range" min="-3" max="3" step="0.1" value="0">
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <span>Object Position</span>
+          <strong id="position"></strong>
+        </div>
+        <div class="metric">
+          <span>Object Rotation</span>
+          <strong id="rotation"></strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. Vector Calculator</h2>
+
+      <p>Vector A (x, y, z)</p>
+      <div class="buttons">
+        <input id="ax" type="number" value="2" step="0.5">
+        <input id="ay" type="number" value="1" step="0.5">
+        <input id="az" type="number" value="0" step="0.5">
+      </div>
+
+      <p>Vector B (x, y, z)</p>
+      <div class="buttons">
+        <input id="bx" type="number" value="1" step="0.5">
+        <input id="by" type="number" value="2" step="0.5">
+        <input id="bz" type="number" value="2" step="0.5">
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <span>Magnitude |A|</span>
+          <strong id="amag"></strong>
+        </div>
+        <div class="metric">
+          <span>Magnitude |B|</span>
+          <strong id="bmag"></strong>
+        </div>
+        <div class="metric">
+          <span>Dot Product A · B</span>
+          <strong id="dot"></strong>
+        </div>
+        <div class="metric">
+          <span>Vector A + B</span>
+          <strong id="sum"></strong>
+        </div>
+      </div>
+
+      <p class="hint">
+        Magnitude = √(x² + y² + z²)<br>
+        Dot product = AxBx + AyBy + AzBz
+      </p>
+    </section>
+
+    <section class="card">
+      <h2>3. Rotation Matrix R</h2>
+      <p class="hint">The 3 × 3 matrix used to rotate a point.</p>
+      <pre id="rotMatrix" class="matrix"></pre>
+    </section>
+
+    <section class="card">
+      <h2>4. Homogeneous Transformation</h2>
+      <p class="hint">
+        Enter a sample point. The calculation rotates it and then translates it.
+      </p>
+
+      <p>Sample point P (x, y, z)</p>
+      <div class="buttons">
+        <input id="px" type="number" value="1" step="0.5">
+        <input id="py" type="number" value="0" step="0.5">
+        <input id="pz" type="number" value="0" step="0.5">
+      </div>
+
+      <p>Transformed point P′</p>
+      <div class="metric">
+        <strong id="pointOut"></strong>
+      </div>
+
+      <p class="hint">Transformation matrix T (4 × 4)</p>
+      <pre id="homMatrix" class="matrix"></pre>
+
+      <p class="hint">
+        P′ = RP + t<br>
+        Homogeneous form: [P′; 1] = T[P; 1]
+      </p>
+    </section>
+
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ---------------------------------
+// 1. CREATE THE 3D SCENE
+// ---------------------------------
+
+const mount = document.getElementById('scene');
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#0b1020');
+
+const camera = new THREE.PerspectiveCamera(
+  55,
+  mount.clientWidth / mount.clientHeight,
+  0.1,
+  100
+);
+
+camera.position.set(6, 5, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(mount.clientWidth, mount.clientHeight);
+mount.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0x26334e, 2));
+
+const light = new THREE.DirectionalLight(0xffffff, 2);
+light.position.set(5, 8, 6);
+scene.add(light);
+
+const grid = new THREE.GridHelper(12, 12, 0x45617f, 0x263651);
+scene.add(grid);
+
+const axes = new THREE.AxesHelper(4);
+scene.add(axes);
+
+// Create the cube.
+const geometry = new THREE.BoxGeometry(2, 2, 2);
+
+const material = new THREE.MeshStandardMaterial({
+  color: 0x38bdf8,
+  metalness: 0.15,
+  roughness: 0.3
+});
+
+const cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+
+// Add visible edges to the cube.
+const edgeGeometry = new THREE.EdgesGeometry(geometry);
+
+const edgeMaterial = new THREE.LineBasicMaterial({
+  color: 0xffffff
+});
+
+const edges = new THREE.LineSegments(edgeGeometry, edgeMaterial);
+cube.add(edges);
+
+// ---------------------------------
+// 2. VECTOR VISUALIZATION
+// ---------------------------------
+
+const vectorGroup = new THREE.Group();
+scene.add(vectorGroup);
+
+let arrowA = null;
+let arrowB = null;
+
+function readVector(prefix) {
+  return new THREE.Vector3(
+    Number(document.getElementById(prefix + 'x').value) || 0,
+    Number(document.getElementById(prefix + 'y').value) || 0,
+    Number(document.getElementById(prefix + 'z').value) || 0
+  );
+}
+
+function replaceArrow(oldArrow, vector, color) {
+  if (oldArrow) {
+    vectorGroup.remove(oldArrow);
+    oldArrow.dispose?.();
+  }
+
+  if (vector.length() < 0.000001) return null;
+
+  const arrow = new THREE.ArrowHelper(
+    vector.clone().normalize(),
+    new THREE.Vector3(0, 0, 0),
+    vector.length(),
+    color,
+    0.22,
+    0.13
+  );
+
+  vectorGroup.add(arrow);
+  return arrow;
+}
+
+function format(n) {
+  return (Math.abs(n) < 0.0005 ? 0 : n).toFixed(2);
+}
+
+function updateVectors() {
+  const a = readVector('a');
+  const b = readVector('b');
+
+  arrowA = replaceArrow(arrowA, a, 0xf472b6);
+  arrowB = replaceArrow(arrowB, b, 0xa3e635);
+
+  document.getElementById('amag').textContent =
+    a.length().toFixed(3);
+
+  document.getElementById('bmag').textContent =
+    b.length().toFixed(3);
+
+  document.getElementById('dot').textContent =
+    a.dot(b).toFixed(3);
+
+  const sum = a.clone().add(b);
+
+  document.getElementById('sum').textContent =
+    `(${format(sum.x)}, ${format(sum.y)}, ${format(sum.z)})`;
+}
+
+// ---------------------------------
+// 3. ROTATION AND TRANSFORMATION
+// ---------------------------------
+
+function updateMatrices() {
+  const x = THREE.MathUtils.degToRad(Number(rx.value));
+  const y = THREE.MathUtils.degToRad(Number(ry.value));
+  const z = THREE.MathUtils.degToRad(Number(rz.value));
+
+  const cx = Math.cos(x), sx = Math.sin(x);
+  const cy = Math.cos(y), sy = Math.sin(y);
+  const cz = Math.cos(z), sz = Math.sin(z);
+
+  // XYZ Euler rotation: R = Rz * Ry * Rx.
+  const R = [
+    [
+      cz * cy,
+      cz * sy * sx - sz * cx,
+      cz * sy * cx + sz * sx
+    ],
+    [
+      sz * cy,
+      sz * sy * sx + cz * cx,
+      sz * sy * cx - cz * sx
+    ],
+    [
+      -sy,
+      cy * sx,
+      cy * cx
+    ]
+  ];
+
+  const t = [
+    Number(tx.value),
+    Number(ty.value),
+    Number(tz.value)
+  ];
+
+  const p = [
+    Number(px.value) || 0,
+    Number(py.value) || 0,
+    Number(pz.value) || 0
+  ];
+
+  // Calculate P' = R * P + t.
+  const rotated = R.map(row =>
+    row[0] * p[0] +
+    row[1] * p[1] +
+    row[2] * p[2]
+  );
+
+  const result = rotated.map((value, i) => value + t[i]);
+
+  const fmt = n =>
+    (Math.abs(n) < 0.0005 ? 0 : n).toFixed(3);
+
+  document.getElementById('pointOut').textContent =
+    '(' + result.map(fmt).join(', ') + ')';
+
+  document.getElementById('rotMatrix').textContent =
+    R.map(row =>
+      '[ ' + row.map(fmt).join('  ') + ' ]'
+    ).join('\n');
+
+  // Combine rotation and translation in a 4 × 4 matrix.
+  const T = [
+    [...R[0], t[0]],
+    [...R[1], t[1]],
+    [...R[2], t[2]],
+    [0, 0, 0, 1]
+  ];
+
+  document.getElementById('homMatrix').textContent =
+    T.map(row =>
+      '[ ' + row.map(fmt).join('  ') + ' ]'
+    ).join('\n');
+}
+
+// ---------------------------------
+// 4. UPDATE OBJECT TRANSFORMATION
+// ---------------------------------
+
+const rotationIds = ['rx', 'ry', 'rz'];
+const translationIds = ['tx', 'ty', 'tz'];
+
+function updateTransform() {
+  rotationIds.forEach(id => {
+    document.getElementById(id + 'v').textContent =
+      document.getElementById(id).value + '°';
+  });
+
+  translationIds.forEach(id => {
+    document.getElementById(id + 'v').textContent =
+      Number(document.getElementById(id).value).toFixed(1);
+  });
+
+  cube.rotation.set(
+    THREE.MathUtils.degToRad(Number(rx.value)),
+    THREE.MathUtils.degToRad(Number(ry.value)),
+    THREE.MathUtils.degToRad(Number(rz.value)),
+    'XYZ'
+  );
+
+  cube.position.set(
+    Number(tx.value),
+    Number(ty.value),
+    Number(tz.value)
+  );
+
+  document.getElementById('position').textContent =
+    `(${format(cube.position.x)}, ${format(cube.position.y)}, ${format(cube.position.z)})`;
+
+  document.getElementById('rotation').textContent =
+    `(${Math.round(THREE.MathUtils.radToDeg(cube.rotation.x))}°, ` +
+    `${Math.round(THREE.MathUtils.radToDeg(cube.rotation.y))}°, ` +
+    `${Math.round(THREE.MathUtils.radToDeg(cube.rotation.z))}°)`;
+
+  updateMatrices();
+}
+
+// Connect all sliders.
+[...rotationIds, ...translationIds].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateTransform);
+});
+
+// Connect vector and point inputs.
+['ax', 'ay', 'az', 'bx', 'by', 'bz'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateVectors);
+});
+
+['px', 'py', 'pz'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateMatrices);
+});
+
+// ---------------------------------
+// 5. BUTTONS
+// ---------------------------------
+
+document.getElementById('reset').addEventListener('click', () => {
+  [...rotationIds, ...translationIds].forEach(id => {
+    document.getElementById(id).value = 0;
+  });
+
+  updateTransform();
+
+  camera.position.set(6, 5, 8);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+
+document.getElementById('toggleAxes').addEventListener('click', () => {
+  axes.visible = !axes.visible;
+  grid.visible = !grid.visible;
+});
+
+document.getElementById('wire').addEventListener('click', () => {
+  material.wireframe = !material.wireframe;
+});
+
+let animating = false;
+
+document.getElementById('animate').addEventListener('click', event => {
+  animating = !animating;
+
+  event.currentTarget.textContent =
+    animating ? 'Stop Rotation' : 'Animate Rotation';
+});
+
+// ---------------------------------
+// 6. RESPONSIVE RENDERING
+// ---------------------------------
+
+function resizeScene() {
+  const width = mount.clientWidth;
+  const height = mount.clientHeight;
+
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+
+  renderer.setSize(width, height);
+}
+
+window.addEventListener('resize', resizeScene);
+
+// ---------------------------------
+// 7. START THE APPLICATION
+// ---------------------------------
+
+function animate() {
+  requestAnimationFrame(animate);
+
+  if (animating) {
+    cube.rotation.y += 0.008;
+
+    // Keep the displayed angles and matrices synchronized.
+    rx.value = THREE.MathUtils.radToDeg(cube.rotation.x);
+    ry.value = THREE.MathUtils.radToDeg(cube.rotation.y);
+    rz.value = THREE.MathUtils.radToDeg(cube.rotation.z);
+
+    updateTransform();
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+updateTransform();
+updateVectors();
+updateMatrices();
+animate();
+
+</script>
+</body>
+</html>
