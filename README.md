@@ -1,37 +1,63 @@
-<<<<<<< HEAD
+
 # 3D Geometry Lab
 
-An interactive browser-based learning project for 3D vectors and transformations, built with JavaScript and Three.js.
+An interactive 3D mathematics visualizer built with JavaScript and Three.js. Explore vectors, rotation matrices, and homogeneous coordinate transformations.
 
 ## Features
-- Interactive 3D cube with X/Y/Z rotation and translation controls
-- Orbit, zoom, and pan controls
-- Toggle coordinate axes/grid and cube wireframe
-- Vector A/B visualization
-- Live vector magnitude, dot product, and vector addition calculations
-- Responsive layout
 
-## Run locally
-Because this project uses JavaScript modules, run it through a local HTTP server rather than opening `index.html` directly.
+- Interactive 3D cube with X, Y, and Z rotation controls
+- Translation controls for moving objects in 3D space
+- Orbit camera controls for viewing the scene from different angles
+- 3D vector visualization for vectors A and B
+- Vector magnitude, dot product, and vector addition calculations
+- Live 3 × 3 rotation matrix
+- Live 4 × 4 homogeneous transformation matrix
+- Transformed point calculations using rotation and translation
+- Wireframe and coordinate-axis controls
 
-### Option A: Python
+## Technologies
+
+- JavaScript (ES modules)
+- Three.js
+- HTML5 and CSS3
+- Git and GitHub
+
+## Run Locally
+
+You need Python or another local HTTP server and an internet connection to load Three.js from its CDN.
+
+1. Clone or download this repository.
+2. Open a terminal in the project folder.
+3. Run:
+
 ```bash
 python -m http.server 8000
 ```
-Then open http://localhost:8000
 
-### Option B: VS Code
-Install the Live Server extension, right-click `index.html`, and select **Open with Live Server**.
+4. Open http://localhost:8000 in your browser.
 
-The page loads Three.js from a CDN, so an internet connection is required.
+Alternatively, use the VS Code Live Server extension.
 
-## Concepts demonstrated
-- 3D Cartesian coordinates
-- Vector magnitude: `|A| = sqrt(x² + y² + z²)`
-- Dot product: `A · B = AxBx + AyBy + AzBz`
-- Translation and rotation about the X, Y, and Z axes
-- Interactive 3D rendering and camera controls
+## Mathematics Demonstrated
 
+### Vector magnitude
 
-# 3d-geometry-lab
->>>>>>> 67671495ca370ff66facac4c0f7e8c704b1540c4
+`|A| = sqrt(x² + y² + z²)`
+
+### Dot product
+
+`A · B = AxBx + AyBy + AzBz`
+
+### Point transformation
+
+`P' = R P + t`
+
+Here, `R` is the rotation matrix and `t` is the translation vector.
+
+The homogeneous transformation matrix combines rotation and translation into a single 4 × 4 matrix.
+
+## Future Improvements
+
+- Visual explanation of matrix multiplication
+- Additional transformation types
+- Automated tests for mathematical calculations
