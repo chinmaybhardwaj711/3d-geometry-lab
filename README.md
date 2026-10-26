@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 3D Geometry Lab
 
 An interactive browser-based learning project for 3D vectors and transformations, built with JavaScript and Three.js.
@@ -33,3 +34,6 @@ The page loads Three.js from a CDN, so an internet connection is required.
 
 ## Before adding to a resume
 Run and test the project, understand the math and code, take your own screenshots, and publish the repository. Do not claim features or expertise you cannot explain in an interview.
+=======
+# 3d-geometry-lab
+>>>>>>> 67671495ca370ff66facac4c0f7e8c704b1540c4
